@@ -1,0 +1,67 @@
+<div class="col-sm-9">
+  <div class="col-sm-5">
+    <br>
+    <% if (typeof success !== "undefined" && typeof pageAction!== "undefined" && pageAction !== "add") { %>
+      <div class="alert <%= success === true ? 'alert-success' : 'alert-warning' %> alert-dismissible fade show" role="alert">
+        <strong><%= message %></strong>
+        <input id="urlToRedirect" type="hidden" value="/categories/add" />
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" onclick="closeAlert()"></button>
+      </div>
+    <% } %>
+    <form action="/categories/save" method="POST">
+        <div class="mb-3 row">
+            <label for="name" class="col-sm-3 col-form-label">Name</label>
+            <div class="col-sm-9">
+                <input type="text" class="form-control" id="name" name="name" required>
+            </div>
+        </div>
+
+        <div class="mb-3 row">
+            <label for="description" class="col-sm-3 col-form-label">Description</label>
+            <div class="col-sm-9">
+                <input type="text" class="form-control" id="description" name="description" required>
+            </div>
+        </div>
+
+        <div class="mb-3 row">
+            <label for="slug" class="col-sm-3 col-form-label">Slug</label>
+            <div class="col-sm-9">
+                <input type="text" class="form-control" id="slug" name="slug" required>
+            </div>
+        </div>
+
+        <% if (typeof categories !== "undefined" && categories.length > 0) { %>
+            <div class="mb-3 row">
+                <label for="parentCat" class="col-sm-3 col-form-label">Parent Category:</label>
+                <div class="col-sm-9">
+                <select name="parentCategory">
+                    <option value="">None</option>
+                    <% categories.forEach(category => { %>
+                    <option value="<%= category._id %>"><%= category.name %></option>
+                    <% }) %>
+                </select><br>
+                </div>
+            </div>
+        <% } %>
+
+
+        <div class="mb-3 row">
+            <label for="role" class="col-sm-3 col-form-label">isActive ?</label>
+            <div class="col-sm-9">
+                <div class="form-check form-switch">
+                    <label class="form-check-label" for="switchCheckChecked">Yes</label>
+                    <input class="form-check-input" type="checkbox" name="isActive" role="switch" id="switchCheckChecked" checked>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-3 row">
+            <div class="col-sm-9 offset-sm-0">
+                <button type="submit" class="btn btn-primary">Add Category</button>
+                <button type="button" class="btn btn-dark"><a href="/categories">List</a></button>
+            </div>
+        </div>
+    </form>
+  </div>
+</div>
+  

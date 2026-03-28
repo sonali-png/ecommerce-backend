@@ -1,0 +1,83 @@
+<%
+const CUSTOMER = parseInt(process.env.CUSTOMER, 10);
+const ADMIN = parseInt(process.env.ADMIN, 10);
+const SELLER = parseInt(process.env.SELLER, 10);
+%>
+
+<div class="col-sm-9">
+  <div class="col-sm-5">
+    <br>
+    <% if (typeof success !== "undefined") { %>
+      <div class="alert <%= success === true ? 'alert-success' : 'alert-warning' %> alert-dismissible fade show" role="alert">
+        <strong><%= message %></strong>
+        <input id="urlToRedirect" type="hidden" value="/users/add" />
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" onclick="closeAlert()"></button>
+      </div>
+    <% } %>
+    <form action="/users/save" method="POST">
+        <div class="mb-3 row">
+            <label for="username" class="col-sm-3 col-form-label">Name</label>
+            <div class="col-sm-9">
+                <input type="text" class="form-control" id="username" name="name" required>
+            </div>
+        </div>
+
+        <div class="mb-3 row">
+            <label for="email" class="col-sm-3 col-form-label">Email</label>
+            <div class="col-sm-9">
+                <input type="text" class="form-control" id="email" name="email" required>
+            </div>
+        </div>
+
+        <div class="mb-3 row">
+            <label for="password" class="col-sm-3 col-form-label">Password</label>
+            <div class="col-sm-9">
+                <input type="password" class="form-control" id="" name="password" required>
+            </div>
+        </div>
+
+        <div class="mb-3 row">
+            <label for="passwordC" class="col-sm-3 col-form-label">Confirm Password</label>
+            <div class="col-sm-9">
+                <input type="password" class="form-control" id="passwordC" required>
+            </div>
+        </div>
+
+        <div class="mb-3 row">
+            <label for="role" class="col-sm-3 col-form-label">Role</label>
+            <div class="col-sm-9">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" id="inlineCheckbox1" name="role" value="<%= ADMIN %>">
+                    <label class="form-check-label" for="inlineCheckbox1">Admin</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" id="inlineCheckbox2" name="role value="<%= CUSTOMER %>">
+                    <label class="form-check-label" for="inlineCheckbox2">Customer</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" id="inlineCheckbox3" name="role value="<%= SELLER %>">
+                    <label class="form-check-label" for="inlineCheckbox3">Seller</label>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="mb-3 row">
+            <label for="role" class="col-sm-3 col-form-label">status </label>
+            <div class="col-sm-9">
+                <div class="form-check form-switch">
+                    <label class="form-check-label" for="switchCheckChecked">Active ?</label>
+                    <input class="form-check-input" type="checkbox" name="status" role="switch" id="switchCheckChecked" checked>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-3 row">
+            <div class="col-sm-9 offset-sm-0">
+                <button type="submit" class="btn btn-primary">Add User</button>
+            </div>
+        </div>
+    </form>
+  </div>
+</div>
+
