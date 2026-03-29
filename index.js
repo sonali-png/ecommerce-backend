@@ -5,6 +5,7 @@ import productRoutes from "./routes/product.js";
 import userRoutes from "./routes/user.js";
 import categoryRoutes from "./routes/category.js";
 import authRoutes from "./routes/auth.js";
+import wishlistRoutes from "./routes/wishlist.js";
 import connectDB from "./src/config/db.js";
 import dotenv from "dotenv";
 import cors from "cors";
@@ -51,6 +52,7 @@ app.use("/", authRoutes);
 app.use("/products", productRoutes);
 app.use("/users", userRoutes);
 app.use("/categories", categoryRoutes);
+app.use("/wishlist", wishlistRoutes);
 
 const startServer = async () => {
   await connectDB();

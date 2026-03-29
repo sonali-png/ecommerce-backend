@@ -98,8 +98,16 @@ router.post("/login", async (req, res) => {
       path: "/"
     });
 
-    res.json({ accessToken });
-
+    res.json(
+      { 
+        accessToken,
+        user: {
+          id: user._id,
+          username: user.userName,
+          email: user.email,
+          role:user.role
+        }
+      });
   } catch (error) {
     console.log(`Login Error: ${error.message}`);
     res.status(500).json({ message: "Server error" });
