@@ -20,13 +20,18 @@ router.post("/", authMiddleware, async (req, res) => {
 // Remove from wishlist
 router.delete("/:productId", authMiddleware, async (req, res) => {
   const { productId } = req.params;
-
-  const wishlist = await Wishlist.findOneAndUpdate(
-    { userId: req.user.id },
-    { $pull: { products: productId } },
-    { new: true }
-  );
-  res.json(wishlist);
+  let wishlist = [];
+  try {
+    wishlist = await Wishlist.findOneAndUpdate(
+      { userId: req.user.id },
+      { $pull: { products: productId } },
+      { new: true }
+    );
+  } catch(error) {
+    console.log(`error : ${error.message}`);
+  }
+  res.json({wishlist});
+  
 });
 
 
