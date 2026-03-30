@@ -8,6 +8,9 @@ const ProductService = {
   getProductById:async (id) => {
     return await ProductRepo.findById(id);
   },
+  getProductsByIds:async (ids) => {
+    return await ProductRepo.findByIds(ids);
+  },
   createProduct:async (data) => {
     return await ProductRepo.create(data);
   },

@@ -1,12 +1,9 @@
-// routes/wishlist.js
 import express from "express";
 import Wishlist from "../src/models/Wishlist.js";
 import { authMiddleware } from "../src/middlewares/authMiddleware.js";
-
 const router = express.Router();
 
-
-// ➕ Add to wishlist
+// Add to wishlist
 router.post("/", authMiddleware, async (req, res) => {
   const { productId } = req.body;
 
@@ -20,7 +17,7 @@ router.post("/", authMiddleware, async (req, res) => {
 });
 
 
-// ❌ Remove from wishlist
+// Remove from wishlist
 router.delete("/:productId", authMiddleware, async (req, res) => {
   const { productId } = req.params;
 
@@ -29,31 +26,32 @@ router.delete("/:productId", authMiddleware, async (req, res) => {
     { $pull: { products: productId } },
     { new: true }
   );
-
   res.json(wishlist);
 });
 
 
-// 📥 Get wishlist (with product details)
+// Get wishlist (with product details)
 router.get("/", authMiddleware, async (req, res) => {
-  const wishlist = await Wishlist.findOne({ userId: req.user.id })
-    .populate("products");
-
+  let wishlist = await Wishlist.findOne({ userId: req.user.id }).populate("products");
+  
+  if(!wishlist) {
+    wishlist = { products: []};
+  }
   res.json(wishlist);
 });
 
 
-// 🔄 Merge guest wishlist
+// Merge guest wishlist
 router.post("/merge", authMiddleware, async (req, res) => {
-  const { items } = req.body; // array of productIds
+  const { items } = req.body;
 
-//   const wishlist = await Wishlist.findOneAndUpdate(
-//     { userId: req.user.id },
-//     { $addToSet: { products: { $each: items } } },
-//     { upsert: true, new: true }
-//   );
+  const wishlist = await Wishlist.findOneAndUpdate(
+    { userId: req.user.id },
+    { $addToSet: { products: { $each: items } } },
+    { upsert: true, new: true }
+  );
 
-//   res.json(wishlist);
+  res.json(wishlist);
 });
 
 export default router;

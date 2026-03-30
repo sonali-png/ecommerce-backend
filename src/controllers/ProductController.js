@@ -61,6 +61,17 @@ export const getProductById = async (req, res) => {
   }
 };
 
+export const getProductsByIds = async (req, res) => {
+  try {
+    const { ids } = req.body;    
+    const products = await ProductService.getProductsByIds(ids);
+    if (!products) return res.status(404).json({ message: "Products not found" });
+    res.status(201).json(products);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 export const createProduct = async (req, res) => {
 
   try {

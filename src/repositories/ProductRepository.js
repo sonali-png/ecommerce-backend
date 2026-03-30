@@ -8,6 +8,9 @@ class ProductRepository {
     const total = await Product.countDocuments();
     return { products, total };
   }
+  async findByIds(ids) {
+    return await Product.find({_id: {$in: ids}})
+  }
   async findById(id) {
     return await Product.findById(id);
   }
