@@ -16,8 +16,8 @@ const UserService = {
     let result = await UserRepo.create(data);
     return result;
   },
-  getDataByFieldName:async(query) => {
-    return await UserRepo.findOne(query);
+  getDataByFieldName:async(query, exclude="") => {
+    return await UserRepo.findOne(query, exclude);
   }
 }
 export default UserService;

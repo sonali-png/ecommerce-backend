@@ -5,6 +5,8 @@ import productRoutes from "./routes/product.js";
 import userRoutes from "./routes/user.js";
 import categoryRoutes from "./routes/category.js";
 import authRoutes from "./routes/auth.js";
+import apiRoutes from "./routes/api.js";
+import adminRoutes from "./routes/admin.js";
 import wishlistRoutes from "./routes/wishlist.js";
 import connectDB from "./src/config/db.js";
 import dotenv from "dotenv";
@@ -48,13 +50,16 @@ app.use(express.static("public"));
 app.use(cookieParser());
 
 // Routes
+
 app.use("/", authRoutes);
+app.use("/admin", adminRoutes);
 app.use("/products", productRoutes);
 app.use("/users", userRoutes);
 app.use("/categories", categoryRoutes);
 app.use("/wishlist", wishlistRoutes);
+app.use("/api", apiRoutes);
 
-const startServer = async () => {
+const startServer = async (req, res) => {
   await connectDB();
   app.listen(5000, () => {
     console.log("Server running on port 5000");

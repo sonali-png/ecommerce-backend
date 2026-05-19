@@ -22,6 +22,10 @@ const categorySchema = new mongoose.Schema({
     ref: 'Category',
     default: null
   },
+  attributes: {
+    sizes: [String],
+    colors: [String]
+  },
   status: {
     type: Boolean,
     default: true

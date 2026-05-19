@@ -1,26 +1,46 @@
 import mongoose from "mongoose";
+const variantSchema = new mongoose.Schema({
+  size: String,
+  color: String,
+  price: Number,
+  discount: Number,
+  stock: Number,
+  sku: String
+});
 
-import mongooseDouble from "mongoose-double";
-mongooseDouble(mongoose);
+const imageSchema = new mongoose.Schema({
+  url: String,
+  public_id: String
+});
 
+const colorImageSchema = new mongoose.Schema({
+  color: String,
+  images: imageSchema
+});
 
-const ProductSchema = new mongoose.Schema(
-  {
-    name: { type: String, required: true },
-    description: { type: String, required: true },
-    category: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Category",
-      required:true
-    },
-    brand: { type: String, required:true },
-    images: { 
-      type: [String], 
-      required:true 
-    },
-    slug:{ type:String }
+const productSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+
+  categoryId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Category"
   },
-  { timestamps: true }
-);
 
-export default mongoose.model("Product", ProductSchema);
+  brand: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Brand"
+  },
+
+  description: String,
+
+  variants: [variantSchema],
+
+  colorImages: [colorImageSchema],
+
+  thumbImage: [imageSchema],
+
+  status: { type: Boolean, default: true }
+
+}, { timestamps: true });
+
+export default mongoose.model("Product", productSchema);

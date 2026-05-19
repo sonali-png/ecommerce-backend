@@ -1,8 +1,9 @@
 import Product from "../models/Product.js";
 import Size from "../models/Size.js"; 
+import Brand from "../models/Brand.js";
 class ProductRepository {
   async findAll(limit = 10, offset=0) {
-    const products = await Product.find()
+    const products = await Product.find().populate("brand", "name")
     .skip(offset)
     .limit(limit);
     const total = await Product.countDocuments();

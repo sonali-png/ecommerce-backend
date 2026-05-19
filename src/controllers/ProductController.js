@@ -1,5 +1,4 @@
 import ProductService from "../services/ProductService.js";
-import ProductDetailService from "../services/ProductDetailService.js";
 import CategoryService from "../services/CategoryService.js";
 import cloudinary from "../config/cloudinary.js";
 import mongoose from "mongoose";
@@ -119,7 +118,6 @@ export const createProduct = async (req, res) => {
       };
     }).filter(Boolean);
     console.log(`details ${filteredDetails}`);
-    await ProductDetailService.createProductInDetail(filteredDetails);
 
     res.status(201).render('products/add', {
       success: true,

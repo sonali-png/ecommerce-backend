@@ -27,7 +27,7 @@ export const getCategories = async (req, res) => {
   try {
     const { categories, total } = await CategoryService.getCategories(page, limit);
 
-    res.status(201).render("categories/list", {
+    res.send({
       success: true,
       title: "Categories list",
       total,

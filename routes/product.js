@@ -1,15 +1,18 @@
 import express from "express";
-import { getProducts, getProductById, createProduct, getProductForm, getProductsByIds} from "../src/controllers/ProductController.js";
-import multer from "multer";
+import upload from "../src/middlewares/upload.js";
+import { 
+    getProducts, 
+    createProduct, 
+    getProductForm, 
+    getProductsByIds
+} from "../src/controllers/ProductController.js";
 
-const upload = multer({ dest: "uploads/" });
 
 const router = express.Router();
 
 router.get("/", getProducts);
-
 router.get("/add", getProductForm);
 router.post("/bulk", getProductsByIds);
+router.post("/save", upload.array("images", 5), createProduct);
 
-router.post("/save", upload.array("images"), createProduct);
 export default router;

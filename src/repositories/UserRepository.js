@@ -5,7 +5,6 @@ class UserRepository {
     const skip = (page - 1) * limit;
     const users = await User.find().skip(skip).limit(limit);
     const total = await User.countDocuments();
-    console.log(`TOtal at userrepositoru ${total}`);
     return { users, total };
   }
   async find() {
@@ -15,8 +14,8 @@ class UserRepository {
   async findById(id) {
     return await User.findById(id);
   } 
-  async findOne (query) {
-    const user = await User.findOne(query);
+  async findOne (query, exclude="") {
+    const user = await User.findOne( query ).select(exclude);
     return user;
     
   }

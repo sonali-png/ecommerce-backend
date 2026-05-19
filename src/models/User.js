@@ -5,15 +5,18 @@ const ADMIN = parseInt(process.env.ADMIN, 10);
 const SELLER = parseInt(process.env.SELLER, 10);
 
 const userSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  userName: {
+  userId: {
     type:String,
-    trim:true,
     unique: true
+  },
+  firstName: {
+    type:String,
+  }, 
+  lastName: {
+    type:String,
+  },
+  gender: {
+    type:String,
   },
   email: {
     type: String,
@@ -21,7 +24,6 @@ const userSchema = new mongoose.Schema({
     unique: true,
     lowercase: true
   },
-
   password: {
     type: String,
     required: true
@@ -38,11 +40,6 @@ const userSchema = new mongoose.Schema({
     default: ''
   },
 
-  address: {
-    type: String,
-    default: ''
-  },
-
   isActive: {
     type: Boolean,
     default: true
@@ -53,5 +50,19 @@ const userSchema = new mongoose.Schema({
     default: false
   }
 }, { timestamps: true });
+
+/* mongoose.set("debug", (collectionName, method, query, doc, options) => {
+  let mongoMethod = "";
+
+  if (method === "findOne") mongoMethod = "findOne";
+  else if (method === "find") mongoMethod = "find";
+  else if (method === "updateOne") mongoMethod = "updateOne";
+  else if (method === "insertOne") mongoMethod = "insertOne";
+  else mongoMethod = method;
+
+  console.log(
+    `db.${collectionName}.${mongoMethod}(${JSON.stringify(query)}, ${JSON.stringify(doc || {})})`
+  );
+}); */
 
 export default mongoose.model('User', userSchema);
