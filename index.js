@@ -8,10 +8,14 @@ import authRoutes from "./routes/auth.js";
 import apiRoutes from "./routes/api.js";
 import adminRoutes from "./routes/admin.js";
 import wishlistRoutes from "./routes/wishlist.js";
+import brandRoutes from"./routes/brand.js";
+import cartRoutes from "./routes/cart.js";
+
 import connectDB from "./src/config/db.js";
 import dotenv from "dotenv";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import filterRoutes from "./routes/filter.js";
 
 
 dotenv.config();
@@ -22,6 +26,10 @@ app.use(cors( {
   credentials: true
 }));
 
+app.use((req, res, next) => {
+    console.log(req.method, req.url);
+    next();
+});
 // View engine setup
 app.set("view engine", "ejs");
 app.use(expressLayout);
@@ -40,6 +48,8 @@ const __dirname = path.dirname(__filename);
 app.use('/bootstrap', express.static(path.join(__dirname, 'node_modules/bootstrap/dist')));
 app.use('/bootstrap-icons', express.static(__dirname + '/node_modules/bootstrap-icons/font'));
 
+
+
 //Body parser middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -50,19 +60,24 @@ app.use(express.static("public"));
 app.use(cookieParser());
 
 // Routes
-
-app.use("/", authRoutes);
+app.get("/", (req, res) => {
+    res.send("Backend Working");
+});
+// app.use("/", authRoutes);
+app.use("/filter", filterRoutes);
 app.use("/admin", adminRoutes);
 app.use("/products", productRoutes);
 app.use("/users", userRoutes);
 app.use("/categories", categoryRoutes);
 app.use("/wishlist", wishlistRoutes);
+app.use("/brands", brandRoutes);
 app.use("/api", apiRoutes);
+app.use('/cart', cartRoutes);
 
 const startServer = async (req, res) => {
   await connectDB();
   app.listen(5000, () => {
-    console.log("Server running on port 5000");
+    console.log("Server running on port 5000 here afer ");
   });
 };
 startServer();

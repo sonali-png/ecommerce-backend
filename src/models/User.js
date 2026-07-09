@@ -40,7 +40,7 @@ const userSchema = new mongoose.Schema({
     default: ''
   },
 
-  isActive: {
+  status: {
     type: Boolean,
     default: true
   },

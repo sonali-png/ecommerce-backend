@@ -7,30 +7,31 @@ const categorySchema = new mongoose.Schema({
     unique: true,
     trim: true
   },
-  slug: {
-    type: String,
-    required: true,
-    unique: true,
-    lowercase: true
-  },
   description: {
     type: String,
     default: ''
   },
-  parent_category: {
+  slug: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true
+  },
+  parentCategory: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Category',
     default: null
   },
-  attributes: {
-    sizes: [String],
-    colors: [String]
-  },
+  attributeIds: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Attributes"
+  }]
+  ,
   status: {
     type: Boolean,
     default: true
   },
-  is_deleted: {
+  isDeleted: {
     type: Boolean,
     default: false
   }

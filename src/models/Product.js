@@ -1,46 +1,167 @@
 import mongoose from "mongoose";
-const variantSchema = new mongoose.Schema({
-  size: String,
-  color: String,
-  price: Number,
-  discount: Number,
-  stock: Number,
-  sku: String
-});
+
+
+const specificationSchema = new mongoose.Schema({
+  attributeId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Attributes",
+    required: true
+  },
+  value: String
+}, { _id: false });
 
 const imageSchema = new mongoose.Schema({
   url: String,
-  public_id: String
-});
+  public_id: String,
+  alt: String,
+  isPrimary: {
+    type: Boolean,
+    default: false
+  }
+}, { _id: false });
 
-const colorImageSchema = new mongoose.Schema({
-  color: String,
-  images: imageSchema
-});
-
-const productSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-
-  categoryId: {
+const attributeSchema = new mongoose.Schema({
+  attributeId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Category"
+    ref: "Attribute"
   },
 
-  brand: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Brand"
-  },
+  value: String
+}, { _id: false });
 
-  description: String,
+const variantSchema = new mongoose.Schema({
+  price: Number,
+  discount: Number,
+  stock: Number
+}, {
+  _id: false
+});
 
-  variants: [variantSchema],
+const productSchema = new mongoose.Schema(
+  {
+    // Basic Information
+    name: {
+      type: String,
+      required: true,
+      trim: true
+    },
 
-  colorImages: [colorImageSchema],
+    slug: {
+      type: String,
+      unique: true,
+      lowercase: true,
+      trim: true
+    },
 
-  thumbImage: [imageSchema],
+    description: String,
+    shortDescription: String,
 
-  status: { type: Boolean, default: true }
+    // Relations
+    categoryId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+      required: true
+    },
 
-}, { timestamps: true });
+    brandId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Brand"
+    },
+    categorySlug: String,
+    brandSlug: String,
+    minPrice: Number,
+    maxPrice: Number,
+    totalStock: Number,
+    thumbnail: String,
+
+    // Variants
+    variants: [variantSchema],
+
+    // Color-wise Images
+    colorImages: {
+      type: Map,
+      of: [imageSchema],
+      default: {}
+    },
+
+    // Dynamic Attributes - isVariant - false will be consider as specification
+    specifications: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Attributes",
+      required: true
+    }],
+
+    // Search Tags
+    tags: [String],
+
+    // SEO
+    metaTitle: String,
+    metaDescription: String,
+    metaKeywords: [String],
+
+    // Product Labels
+    isFeatured: {
+      type: Boolean,
+      default: false
+    },
+
+    isTrending: {
+      type: Boolean,
+      default: false
+    },
+
+    isNewArrival: {
+      type: Boolean,
+      default: false
+    },
+
+    isBestSeller: {
+      type: Boolean,
+      default: false
+    },
+
+    // Ratings
+    averageRating: {
+      type: Number,
+      default: 0
+    },
+
+    reviewCount: {
+      type: Number,
+      default: 0
+    },
+    content: [
+      {
+        title: String,
+        content: String
+      }
+    ],
+    details: {
+      productCode: { type:String, unique:true, required: true},
+      mrp:String,
+      marketedBy:String,
+      soldBy:String,
+      netQty: String,
+      manufacturedBy:String,
+      countryOfOrigin:String,
+      customerCareAddress:String,
+      commodity: String
+    },
+
+    // Status
+    status: {
+      type: Boolean,
+      default: true
+    },
+
+    // Is deleted
+    isDeleted: {
+      type: Boolean,
+      default: false
+    }
+  }, {
+  timestamps: true
+  }
+);
 
 export default mongoose.model("Product", productSchema);
