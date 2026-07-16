@@ -39,6 +39,28 @@ const models = {
   
 };
 
+const searchableFields = {
+    products: [
+        "name",
+        "categorySlug",
+        "seoURI",
+        "details.productCode"
+    ],
+
+    categories: [
+        "name",
+        "slug"
+    ],
+
+    brands: [
+        "name"
+    ],
+
+    colors: [
+        "name"
+    ]
+};
+
 const getModel = (collectionName) => {
   const Model = models[collectionName];
 
@@ -134,22 +156,62 @@ async function getCollectionRecordById(collectionName, id) {
 // ==========================
 // Utility function - All records
 // ==========================
-async function getCollectionRecords(collectionName) {
-  console.log("In function getcollection records");
+async function getCollectionRecords(collectionName, options={}) {
+
+  const {
+      limit = 10,
+      offset = 0,
+      search = "",
+      whereClause = {},
+      sort = { createdAt: -1 }
+  } = options;
+
   const Model = getModel(collectionName);
-  let query = Model.find({ isDeleted: { $ne: true }, status: { $eq: true } });
+
+  let filter = {
+      isDeleted: { $ne: true },
+      status: true,
+      ...whereClause
+  };
+
+  const fields = searchableFields[collectionName] || [];
+
+  if (search.trim() && fields.length) {
+
+      filter.$or = fields.map(field => ({
+          [field]: {
+              $regex: search,
+              $options: "i"
+          }
+      }));
+
+  }
+
+  let query = Model.find(filter)
+    .sort(sort)
+    .skip(offset)
+    .limit(limit);
+  
   if (collectionName === "homepagesectionitems") {
     query = query.sort({ displayOrder: 1 });
   }
+
   const populatePaths = pathForCollections[collectionName];
   if (populatePaths) {
     populatePaths.forEach(p => {
       query = query.populate(p);
     });
   }
-  const data = await query.exec();
-  return data;
+
+  query = query.skip(offset).limit(limit);
+  const records = await query.exec();
+  const totalRecords = await Model.countDocuments(filter);
+  return {
+    data: records,
+    totalRecords
+  };
 }
+
 async function generateProductCode() {
   return Math.floor(
       100000000 + Math.random() * 900000000
@@ -198,6 +260,34 @@ async function generateProductSKU(productCode, variants) {
 }
 
 
+// ==========================
+// Fetch Records
+// ==========================
+router.post("/fetchRecordsNew", async (req, res) => {
+  try {
+    const { collectionName, options={}} = req.body;
+    const {
+      id=null,
+      whereClause={},
+      limit=10,
+      offset=1,
+      sort={createdAt: -1},
+      search="",
+      populate=[]
+    } = options;
+    console.log(whereClause);
+    console.log(whereClause ? "whre" : (id !== null ? "here in id " : "blanck"));
+    const data = id !== null 
+                    ? await getCollectionRecordById(collectionName, id) 
+                    : await getCollectionRecords(collectionName, options)
+    res.json(data);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      error: err.message
+    });
+  }
+});
 
 // ==========================
 // Fetch Records
