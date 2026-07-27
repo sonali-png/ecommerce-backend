@@ -54,7 +54,6 @@ const productSchema = new mongoose.Schema(
     },
 
     description: String,
-    shortDescription: String,
 
     // Relations
     categoryId: {
@@ -130,24 +129,15 @@ const productSchema = new mongoose.Schema(
       type: Number,
       default: 0
     },
-    content: [
-      {
-        title: String,
-        content: String
-      }
-    ],
     details: {
       productCode: { type:String, unique:true, required: true},
-      mrp:String,
-      marketedBy:String,
-      soldBy:String,
-      netQty: String,
-      manufacturedBy:String,
+      genericName:String,
       countryOfOrigin:String,
-      customerCareAddress:String,
-      commodity: String
+      manufacturedBy:String,
+      manufacturerAddress:String,
+      packedBy:String,
+      packerAddress:String,
     },
-
     // Status
     status: {
       type: Boolean,

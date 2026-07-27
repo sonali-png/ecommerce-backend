@@ -11,6 +11,7 @@ import Attributes from "../src/models/Attributes.js";
 import HomePageSection from "../src/models/HomePageSection.js";
 import HomePageSectionItem from "../src/models/HomePageSectionItem.js";
 import Colors from "../src/models/Colors.js";
+import User from "../src/models/User.js";
 
 const upload = multer({ dest: "uploads/" });
 
@@ -36,28 +37,34 @@ const models = {
   brands: Brand,
   homepagesections: HomePageSection,
   homepagesectionitems: HomePageSectionItem,
-  
+  users:User
 };
 
 const searchableFields = {
     products: [
-        "name",
-        "categorySlug",
-        "seoURI",
-        "details.productCode"
+      "name",
+      "categorySlug",
+      "seoURI",
+      "details.productCode"
     ],
-
+    attributes: [
+      "name",
+      "slug"
+    ],
     categories: [
-        "name",
-        "slug"
+      "name",
+      "slug"
     ],
-
     brands: [
-        "name"
+      "name"
     ],
-
     colors: [
-        "name"
+      "name"
+    ],
+    users: [
+      "firstName",
+      "lastName",
+      "userId"
     ]
 };
 
@@ -157,40 +164,37 @@ async function getCollectionRecordById(collectionName, id) {
 // Utility function - All records
 // ==========================
 async function getCollectionRecords(collectionName, options={}) {
-
   const {
-      limit = 10,
-      offset = 0,
-      search = "",
-      whereClause = {},
-      sort = { createdAt: -1 }
+    limit = 10,
+    offset = 0,
+    search = "",
+    whereClause = {},
+    sort = { createdAt: -1 },
   } = options;
-
+  
   const Model = getModel(collectionName);
 
   let filter = {
-      isDeleted: { $ne: true },
-      status: true,
-      ...whereClause
+    isDeleted: { $ne: true },
+    status: true,
+    ...whereClause
   };
 
   const fields = searchableFields[collectionName] || [];
 
-  if (search.trim() && fields.length) {
-
-      filter.$or = fields.map(field => ({
-          [field]: {
-              $regex: search,
-              $options: "i"
-          }
-      }));
-
+  if (search !== "" && fields.length) {
+    filter.$or =  fields.map(field => ({
+                    [field]: {
+                      $regex: search,
+                      $options: "i"
+                    }
+                    })
+                  );
   }
-
   let query = Model.find(filter)
-    .sort(sort)
-    .skip(offset)
-    .limit(limit);
+                   .sort(sort)
+                   .skip(offset)
+                   .limit(limit);
   
   if (collectionName === "homepagesectionitems") {
     query = query.sort({ displayOrder: 1 });
@@ -219,11 +223,10 @@ async function generateProductCode() {
 }
 async function generateProductSKU(productCode, variants) {
   const keysToRemove = ["price", "discount", "stock"];
-
   return variants
     .filter(variant => {
       return Object.entries(variant).some(([key, value]) => {
-        if (keysToRemove.includes(key)) return false; // ignore housekeeping keys
+        if (keysToRemove.includes(key)) return false;
         if (Array.isArray(value)) return value.length > 0;
         return value !== "" && value !== null && value !== undefined;
       });
@@ -267,16 +270,8 @@ router.post("/fetchRecordsNew", async (req, res) => {
   try {
     const { collectionName, options={}} = req.body;
     const {
-      id=null,
-      whereClause={},
-      limit=10,
-      offset=1,
-      sort={createdAt: -1},
-      search="",
-      populate=[]
+      id=null
     } = options;
-    console.log(whereClause);
-    console.log(whereClause ? "whre" : (id !== null ? "here in id " : "blanck"));
     const data = id !== null 
                     ? await getCollectionRecordById(collectionName, id) 
                     : await getCollectionRecords(collectionName, options)
@@ -294,10 +289,7 @@ router.post("/fetchRecordsNew", async (req, res) => {
 // ==========================
 router.post("/fetchRecords", async (req, res) => {
   try {
-    console.log("here");
     const { collectionName, id=null, whereClause=null } = req.body;
-    console.log(req.body);
-    console.log(whereClause ? "whre" : (id !== null ? "here in id " : "blanck"));
     const data = whereClause
                 ? await getCollectionRecordByCondition(collectionName, whereClause) : 
                   ( 
@@ -323,7 +315,6 @@ router.post("/fetchRecordById", async (req, res) => {
   try {
     const { collectionName, id } = req.body;
     const data = await getCollectionRecordById(collectionName, id);
-    console.log(data);
     res.json(data);
   } catch (err) {
     console.error(err);
@@ -341,18 +332,16 @@ router.post("/addRecord", upload.any(), async (req, res) => {
   try {
     const { collectionName, data } = req.body;
     const Model = getModel(collectionName);
+    
+    let newData = data;
     if (typeof data === "string") {
-      data = JSON.parse(data);
-  }
-    let parsedData = data;
-    console.log(parsedData);
+      newData = JSON.parse(data);
+    }
+    
+    let parsedData = newData;
 
     if (collectionName === "products") {
-      parsedData = await uploadAndMapImages({
-        req,
-        parsedData,
-        folder: "products"
-      });
+      parsedData = await uploadAndMapImages({ req, parsedData, folder: "products" });
       var productCode = await generateProductCode();
       parsedData.variants = await generateProductSKU(productCode, parsedData.variants);
       parsedData.details = {
@@ -360,18 +349,11 @@ router.post("/addRecord", upload.any(), async (req, res) => {
         productCode
       };
       const brand = await Brand.findById(parsedData.brandId);
-
       const slugify = str => str.trim().toLowerCase().replace(/\s+/g, "-");
-
       const seoURI = `${slugify(brand.name)}-${slugify(parsedData.name)}/${productCode}`;
       parsedData.seoURI = seoURI;
     } else if (collectionName === "HomePageSection") {
-      const uploadResult = await cloudinary.uploader.upload(
-        req.files[0].path,
-        {
-          folder: "homepage-sections"
-        }
-      );
+      const uploadResult = await cloudinary.uploader.upload( req.files[0].path, { folder: "homepage-sections"});
       parsedData.image = {
         url: uploadResult.secure_url,
         public_id: uploadResult.public_id
@@ -379,7 +361,7 @@ router.post("/addRecord", upload.any(), async (req, res) => {
     }
     const record = await Model.create(parsedData);
     res.status(201).json({
-      message: "Added successfully",
+      message: "Record Added successfully",
       id: record._id
     });
   } catch (error) {
@@ -435,7 +417,7 @@ router.patch("/updateRecord", upload.any(), async (req, res) => {
       }
     );
     res.json({
-      message: "Updated successfully"
+      message: "Record Updated successfully"
     });
   } catch (error) {
     console.error(error);
@@ -468,7 +450,7 @@ router.delete("/deleteRecord", async (req, res) => {
     }
 
     res.json({
-      message: "Deleted successfully"
+      message: "Record Deleted successfully"
     });
   } catch (err) {
     console.error(err);
@@ -525,7 +507,7 @@ router.delete(
       );
 
       res.json({
-        message: "Deleted successfully"
+        message: "Record Deleted successfully"
       });
     } catch (error) {
       console.error(error);
@@ -578,7 +560,6 @@ router.get("/homepagesectionsByPosition", async (req, res) => {
         )
       ])
     );
-    console.log(`Data`, JSON.stringify(sections, null, 2));
     return res.json(result);
   } catch (err) {
     console.error(err);
