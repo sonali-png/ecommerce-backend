@@ -20,6 +20,18 @@ const imageSchema = new mongoose.Schema({
   }
 }, { _id: false });
 
+
+const colorImagesSchema = new mongoose.Schema({
+  color: {
+    type: String,
+    required: true
+  },
+  images: {
+    type: [imageSchema],
+    default: []
+  }
+}, { _id: false });
+
 const attributeSchema = new mongoose.Schema({
   attributeId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -78,9 +90,8 @@ const productSchema = new mongoose.Schema(
 
     // Color-wise Images
     colorImages: {
-      type: Map,
-      of: [imageSchema],
-      default: {}
+      type : [colorImagesSchema],
+      default: []
     },
 
     // Dynamic Attributes - isVariant - false will be consider as specification

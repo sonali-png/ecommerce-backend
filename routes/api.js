@@ -158,7 +158,7 @@ async function getCollectionRecordById(collectionName, id) {
     });
   }
   const data = await query.exec();
-  return data;
+  return { data: data };
 }
 // ==========================
 // Utility function - All records
