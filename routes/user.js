@@ -1,11 +1,14 @@
 import express from "express";
-import { createUser, getUsers} from "../src/controllers/UserController.js";
+// import { registerUser, getUserData, sendOtp, verifyOtp } from "../src/controllers/UserController.js";
 
 const router = express.Router();
+// console.log("Here in user ")
+// router.get("/", getUserData);
+// router.get("/add", (req, res)=> {
+//     res.render("users/add", {title: "Add user"});
+// });
+// router.post("/save", registerUser);
+// router.post("/phone/send-otp", sendOtp);
+// router.post("/phone/verify-otp", verifyOtp);
 
-router.get("/", getUsers);
-router.get("/add", (req, res)=> {
-    res.render("users/add", {title: "Add user"});
-});
-router.post("/save", createUser);
 export default router;

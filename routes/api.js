@@ -127,7 +127,7 @@ const uploadAndMapImages = async ({
       images
     };
   });
-
+  console.log("parsed data n uploadimge ", parsedData.colorImages);
   return parsedData;
 };
 
@@ -148,9 +148,13 @@ async function getCollectionRecordByCondition(collectionName, whereClause) {
 // ==========================
 // Utility function - single record
 // ==========================
-async function getCollectionRecordById(collectionName, id) {
+async function getCollectionRecordById(collectionName, id, select={}) {
   const Model = getModel(collectionName);
   let query = Model.findById({_id:id, isDeleted: { $ne: true } });
+  if (select && Object.keys(select).length > 0) {
+    query = query.select(select);
+  }
+
   const populatePaths = pathForCollections[collectionName];
   if (populatePaths) {
     populatePaths.forEach(p => {
@@ -170,6 +174,7 @@ async function getCollectionRecords(collectionName, options={}) {
     search = "",
     whereClause = {},
     sort = { createdAt: -1 },
+    select = {}
   } = options;
   
   const Model = getModel(collectionName);
@@ -195,7 +200,11 @@ async function getCollectionRecords(collectionName, options={}) {
                    .sort(sort)
                    .skip(offset)
                    .limit(limit);
-  
+
+  if (select && Object.keys(select).length > 0) {
+    query = query.select(select);
+  }
+
   if (collectionName === "homepagesectionitems") {
     query = query.sort({ displayOrder: 1 });
   }
@@ -270,10 +279,11 @@ router.post("/fetchRecordsNew", async (req, res) => {
   try {
     const { collectionName, options={}} = req.body;
     const {
-      id=null
+      id=null,
+      select={}
     } = options;
     const data = id !== null 
-                    ? await getCollectionRecordById(collectionName, id) 
+                    ? await getCollectionRecordById(collectionName, id, select) 
                     : await getCollectionRecords(collectionName, options)
     res.json(data);
   } catch (err) {
@@ -329,7 +339,9 @@ router.post("/fetchRecordById", async (req, res) => {
 // Add Record
 // ==========================
 router.post("/addRecord", upload.any(), async (req, res) => {
+  console.log("332")
   try {
+    console.log(req.body);
     const { collectionName, data } = req.body;
     const Model = getModel(collectionName);
     
@@ -343,6 +355,7 @@ router.post("/addRecord", upload.any(), async (req, res) => {
     if (collectionName === "products") {
       parsedData = await uploadAndMapImages({ req, parsedData, folder: "products" });
       var productCode = await generateProductCode();
+      console.log(productCode);
       parsedData.variants = await generateProductSKU(productCode, parsedData.variants);
       parsedData.details = {
         ...parsedData.details,
@@ -360,6 +373,7 @@ router.post("/addRecord", upload.any(), async (req, res) => {
       };
     }
     const record = await Model.create(parsedData);
+     
     res.status(201).json({
       message: "Record Added successfully",
       id: record._id

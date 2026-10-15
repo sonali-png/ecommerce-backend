@@ -63,7 +63,7 @@ app.use(cookieParser());
 app.get("/", (req, res) => {
     res.send("Backend Working");
 });
-// app.use("/", authRoutes);
+app.use("/auth", authRoutes);
 app.use("/filter", filterRoutes);
 app.use("/admin", adminRoutes);
 app.use("/products", productRoutes);

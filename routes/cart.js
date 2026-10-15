@@ -65,37 +65,27 @@ router.post('/:userId/merge', async (req, res) => {
     let cart = await Cart.findOne({ userId });
 
     if (!cart) {
-      // User has no database cart, transform guest items to schema format
-      const formattedItems = guestItems.map(item => ({
-        productId: item.id,
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity
-      }));
-      
-      cart = new Cart({ userId, items: formattedItems });
+      cart = new Cart({ userId, items: guestItems });
     } else {
       // User has an existing cart, merge guest items smartly
       guestItems.forEach(guestItem => {
-        const itemIndex = cart.items.findIndex(item => item.productId === guestItem.id);
-
+        //check the index of product id combination with sku 
+        const itemIndex = cart.items.findIndex(item => String(item.productId).trim() === guestItem.productId && item.sku === guestItem.sku);
+        
+        //if item exists with product id and sku in guest cart , add to existing quantity
         if (itemIndex > -1) {
-          // Item exists in both: Combine quantities or choose the highest (Combining is standard)
           cart.items[itemIndex].quantity += guestItem.quantity;
         } else {
-          // Item only exists in guest cart: Add it to database cart
-          cart.items.push({
-            productId: guestItem.id,
-            name: guestItem.name,
-            price: guestItem.price,
-            quantity: guestItem.quantity
-          });
+          // Push to cart if item is not exist
+          cart.items.push(guestItem);
         }
       });
     }
 
-    await cart.save();
-    res.status(200).json({ items: cart.items });
+    const cartResult = await cart.save();
+    if(cartResult) {
+      res.status(200).json({ message: "Product added to cart successfully" });
+    }
   } catch (error) {
     res.status(500).json({ message: 'Error merging cart', error: error.message });
   }
