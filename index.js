@@ -10,6 +10,8 @@ import adminRoutes from "./routes/admin.js";
 import wishlistRoutes from "./routes/wishlist.js";
 import brandRoutes from"./routes/brand.js";
 import cartRoutes from "./routes/cart.js";
+import razorpayRoutes from "./routes/razorpay.js"
+import addressRoutes from "./routes/address.js"
 
 import connectDB from "./src/config/db.js";
 import dotenv from "dotenv";
@@ -73,6 +75,8 @@ app.use("/wishlist", wishlistRoutes);
 app.use("/brands", brandRoutes);
 app.use("/api", apiRoutes);
 app.use('/cart', cartRoutes);
+app.use('/razorpay', razorpayRoutes);
+app.use('/address', addressRoutes);
 
 const startServer = async (req, res) => {
   await connectDB();

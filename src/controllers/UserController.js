@@ -20,7 +20,6 @@ const generateAccessToken = (user) =>
   jwt.sign(
     {
       id: user._id ?? user.id,
-      userId: user.userId,
     },
     USER_ACCESS_SECRET,
     { expiresIn: "15m" }
@@ -30,7 +29,6 @@ const generateRefreshToken = (user) =>
   jwt.sign(
     {
       id: user._id ?? user.id,
-      userId: user.userId,
     },
     USER_REFRESH_SECRET,
     { expiresIn: "7d" }
@@ -38,28 +36,26 @@ const generateRefreshToken = (user) =>
 
 const getPublicUser = (user) => ({
   id: user._id,
-  userId: user.userId,
   email: user.email,
   role: user.role,
   phone: user.phone,
   gender: user.gender,
-  firstName: user.firstName,
-  lastName: user.lastName,
+  fullName: user.fullName
 });
 
 // REGISTER
 export const registerUser = async (req, res) => {
   try {
-    const { userId, password } = req.body;
+    const { email, password } = req.body;
 
-    if (!userId || !password) {
+    if (!email || !password) {
       return res.status(400).json({
-        message: "User ID and password are required",
+        message: "Email and password are required",
       });
     }
 
     const existingUser = await UserService.getDataByFieldName({
-      userId,
+      email,
     });
 
     if (existingUser) {
@@ -89,48 +85,40 @@ export const registerUser = async (req, res) => {
 
 // LOGIN
 export const loginUser = async (req, res) => {
-  console.log("Inside login user");
   try {
-    const { userId = "", email = "", password } = req.body;
-
-    if ((!email && !userId) || !password) {
+    const { email = "", password } = req.body;
+    if ((!email) || !password) {
       return res.status(400).json({
-        message: "User ID or email and password are required",
+        message: "email and password are required",
       });
     }
+    const query = email ? { email } : "";
+    if(query) {
+      const user = await UserService.getDataByFieldName(query);
+      if (!user || !user.password) {
+        return res.status(401).json({
+          message: "Invalid credentials",
+        });
+      }
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        return res.status(401).json({
+          message: "Invalid credentials",
+        });
+      }
 
-    const query = email ? { email } : { userId };
-
-    const user = await UserService.getDataByFieldName(query);
-
-    if (!user || !user.password) {
-      return res.status(401).json({
-        message: "Invalid credentials",
+      const userAccessToken = generateAccessToken(user);
+      const refreshToken = generateRefreshToken(user);
+      await RefreshToken.create({
+        token: refreshToken,
+        id: user._id,
+      });
+      res.cookie("userRefreshToken", refreshToken, cookieOptions);
+      return res.json({
+        userAccessToken,
+        user: getPublicUser(user),
       });
     }
-
-    const isMatch = await bcrypt.compare(password, user.password);
-
-    if (!isMatch) {
-      return res.status(401).json({
-        message: "Invalid credentials",
-      });
-    }
-
-    const userAccessToken = generateAccessToken(user);
-    const refreshToken = generateRefreshToken(user);
-
-    await RefreshToken.create({
-      token: refreshToken,
-      userId: user.userId,
-    });
-
-    res.cookie("userRefreshToken", refreshToken, cookieOptions);
-
-    return res.json({
-      userAccessToken,
-      user: getPublicUser(user),
-    });
   } catch (error) {
     console.error("Login Error:", error.message);
     return res.status(500).json({
@@ -140,47 +128,29 @@ export const loginUser = async (req, res) => {
 };
 
 // GET LOGGED-IN USER DATA
+
 export const getUserData = async (req, res) => {
-  try {
-    const token = req.cookies?.userRefreshToken;
+    try {
+        const user = await User.findById(req.user.id).select(
+            "-password"
+        );
 
-    if (!token) {
-      return res.status(401).json({
-        message: "No refresh token",
-      });
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found",
+            });
+        }
+
+        return res.json({
+            user: getPublicUser(user),
+        });
+    } catch (error) {
+        console.error("Get User Data Error:", error.message);
+
+        return res.status(500).json({
+            message: "Server error",
+        });
     }
-
-    const decoded = jwt.verify(token, USER_REFRESH_SECRET);
-
-    const storedToken = await RefreshToken.findOne({
-      token,
-      valid: true,
-    });
-
-    if (!storedToken || storedToken.replacedBy) {
-      return res.status(401).json({
-        message: "Invalid refresh token",
-      });
-    }
-
-    const user = await UserService.getDataByFieldName({
-      userId: decoded.userId,
-    });
-
-    if (!user) {
-      return res.status(404).json({
-        message: "User not found",
-      });
-    }
-
-    return res.json({
-      user: getPublicUser(user),
-    });
-  } catch (error) {
-    return res.status(401).json({
-      message: "Invalid token",
-    });
-  }
 };
 
 // REFRESH ACCESS TOKEN WITH ROTATION
@@ -198,30 +168,43 @@ export const refreshUserToken = async (req, res) => {
       token: oldToken,
     });
 
-    if (!stored || !stored.valid) {
+    if (!stored) {
       return res.status(401).json({
         message: "Invalid refresh token",
       });
     }
 
-    const decoded = jwt.verify(oldToken, USER_REFRESH_SECRET);
-
-    // Reuse detection
     if (stored.replacedBy) {
+      const decoded = jwt.verify(
+        oldToken,
+        USER_REFRESH_SECRET
+      );
+
       await RefreshToken.updateMany(
-        { userId: decoded.userId },
+        { id: decoded.id },
         { $set: { valid: false } }
       );
 
       res.clearCookie("userRefreshToken", cookieOptions);
 
       return res.status(403).json({
-        message: "Token reuse detected. All sessions revoked.",
+        message: "Token reuse detected. Sessions revoked.",
       });
     }
 
+    if (!stored.valid) {
+      return res.status(401).json({
+        message: "Invalid refresh token",
+      });
+    }
+
+    const decoded = jwt.verify(
+      oldToken,
+      USER_REFRESH_SECRET
+    );
+
     const user = await UserService.getDataByFieldName({
-      userId: decoded.userId,
+      _id: decoded.id,
     });
 
     if (!user) {
@@ -233,14 +216,13 @@ export const refreshUserToken = async (req, res) => {
     const userAccessToken = generateAccessToken(user);
     const newRefreshToken = generateRefreshToken(user);
 
-    // Mark the old token as replaced and invalid
     stored.valid = false;
     stored.replacedBy = newRefreshToken;
     await stored.save();
 
     await RefreshToken.create({
       token: newRefreshToken,
-      userId: user.userId,
+      id: user._id,
     });
 
     res.cookie(
@@ -303,7 +285,7 @@ export const getProtectedData = (req, res) => {
     const decoded = jwt.verify(token, USER_ACCESS_SECRET);
 
     return res.json({
-      message: `Hello ${decoded.userId}, protected data here.`,
+      message: `Hello ${decoded._id}, protected data here.`,
     });
   } catch (error) {
     return res.sendStatus(403);
@@ -318,8 +300,7 @@ export const saveUser = async (req, res) => {
       "email",
       "phone",
       "gender",
-      "firstName",
-      "lastName",
+      "fullName"
     ];
 
     const userData = {};

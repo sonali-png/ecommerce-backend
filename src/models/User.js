@@ -6,23 +6,11 @@ const SELLER = parseInt(process.env.SELLER, 10);
 
 const userSchema = new mongoose.Schema(
   {
-    userId: {
-      type: String,
-      unique: true,
-      sparse: true,
-      trim: true,
-    },
-
-    firstName: {
+    fullName: {
       type: String,
       trim: true,
     },
-
-    lastName: {
-      type: String,
-      trim: true,
-    },
-
+    
     gender: {
       type: String,
       trim: true,
@@ -38,7 +26,7 @@ const userSchema = new mongoose.Schema(
 
     password: {
       type: String,
-      select: false,
+      // select: false,
     },
 
     role: {

@@ -27,7 +27,7 @@ router.post("/register", registerUser);
 router.post("/login", loginUser);
 
 // User data
-router.get("/getuserdata", getUserData);
+router.get("/getuserdata", authMiddleware, getUserData);
 
 // Token management
 router.post("/refresh", refreshUserToken);
